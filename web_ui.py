@@ -72,10 +72,10 @@ def search(q, mr=5):
             m = re.search(r'第(\d+)页', a)
             pian_m = re.search(r'第(\d+)篇', a)
             vol_m = re.search(r'第(\d+)卷', a)
-            if m and pian_m:
-                pp.append({"label": f"第{pian_m.group(1)}篇 第{m.group(1)}页"})
+            if m and pian_m and vol_m:
+                pp.append({"label": f"第{vol_m.group(1)}卷 第{pian_m.group(1)}篇 第{m.group(1)}页"})
             elif m and vol_m:
-                pp.append({"vol": vol_m.group(1), "page": m.group(1), "label": f"第{vol_m.group(1)}卷 第{m.group(1)}页"})
+                pp.append({"label": f"第{vol_m.group(1)}卷 第{m.group(1)}页"})
         pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:8]
         pp = [dict(t) for t in pp]
         res.append({"file":rel,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml,"pages":pp})

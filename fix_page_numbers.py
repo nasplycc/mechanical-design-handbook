@@ -26,6 +26,11 @@ PIAN_NAMES_SHORT = {
     16:"多点啮合柔性传动",17:"减速器、变速器",18:"常用电机、电器及电动(液)推杆与升降机",
     19:"机械振动的控制及利用",20:"机架设计",21:"液压传动",22:"液压控制",23:"气压传动",
 }
+PIAN_VOL = {"第1篇":"第1卷","第2篇":"第1卷","第3篇":"第1卷","第4篇":"第1卷","第5篇":"第1卷",
+    "第6篇":"第2卷","第7篇":"第2卷","第8篇":"第2卷","第9篇":"第2卷","第10篇":"第2卷",
+    "第11篇":"第3卷","第12篇":"第3卷","第13篇":"第3卷","第14篇":"第3卷","第15篇":"第3卷",
+    "第16篇":"第3卷","第17篇":"第4卷","第18篇":"第5卷","第19篇":"第5卷","第20篇":"第4卷",
+    "第21篇":"第4卷","第22篇":"第4卷","第23篇":"第5卷",}
 
 def fullwidth_to_int(s):
     """全角数字→整数"""
@@ -145,7 +150,9 @@ def main():
                     deleted_front_matter += 1
                 else:
                     pn_name = PIAN_NAMES_SHORT.get(pian, "")
-                    new_text = new_text.replace(old, f"第{pian}篇{pn_name} 第{printed_pn}页")
+                    # 根据篇号找到对应卷号
+                    pian_vol = PIAN_VOL.get(f"第{pian}篇", f"第{vol_num}卷")
+                    new_text = new_text.replace(old, f"{pian_vol} 第{pian}篇{pn_name} 第{printed_pn}页")
                 fixed_annotations += 1
                 changed = True
             else:

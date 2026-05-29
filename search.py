@@ -151,8 +151,9 @@ def search_kb(keywords, max_results=5):
         for a in annotations:
             m = re.search(r'第(\d+)页', a)
             pian_m = re.search(r'第(\d+)篇', a)
-            if m and pian_m:
-                p = f"第{pian_m.group(1)}篇 第{m.group(1)}页"
+            vol_m = re.search(r'第(\d+)卷', a)
+            if m and pian_m and vol_m:
+                p = f"第{vol_m.group(1)}卷 第{pian_m.group(1)}篇 第{m.group(1)}页"
                 if p not in pages: pages.append(p)
         
         results.append({
