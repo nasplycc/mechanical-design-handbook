@@ -59,10 +59,11 @@ def main():
             if len(re.sub(r'[\s\d.()（）\-\—]', '', t)) >= 2:
                 headings.append({"l":len(m.group(1)), "t":t})
         
-        pages = list(dict.fromkeys(
-            f"第{m.group(1)}卷 第{m.group(2)}篇 第{m.group(3)}页"
-            for m in re.finditer(r'来源:.*?第(\d+)卷.*?第(\d+)篇.*?第(\d+)页', raw)
-        ))[:3]
+        # 篇范围：从文件头部 来源标注 提取
+        sr = ''
+        sm = re.search(r'> \*\*来源标注：\*\*.*?第(\d+)卷.*?第(\d+)篇.*?》', raw[:800])
+        if sm:
+            sr = f"第{sm.group(1)}卷 第{sm.group(2)}篇"
         
         snippets = []
         for line in text.split("\n"):
@@ -85,7 +86,7 @@ def main():
         
         index.append({
             "f": rel, "gh": f"{GITHUB_BASE}/{rel}", "v": vol or pv, "p": pian, "pn": PIAN_NAMES.get(pian, ""),
-            "h": headings[:15], "s": snippets, "pg": pages,
+            "sr": sr, "h": headings[:15], "s": snippets,
             "t": tags, "kw": top_kws,
         })
     

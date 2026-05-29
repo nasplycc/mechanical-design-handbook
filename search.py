@@ -161,7 +161,6 @@ def search_kb(keywords, max_results=5):
             "vol": vol, "pian": pian,
             "pian_name": PIAN_NAMES.get(pian, ""),
             "matches": match_lines[:5],
-            "pages": pages[:8],
         })
     
     results.sort(key=lambda r: -r["score"])
@@ -265,13 +264,7 @@ def format_search_results(results, query, max_r=5, telegram=False):
             for ln in r['matches'][:3]:
                 parts.append(f"   {ln[:120]}")
         
-        if r['pages']:
-            parts.append("📄 精确页码：")
-            seen = set()
-            for p in r['pages']:
-                if p not in seen:
-                    seen.add(p)
-                    parts.append(f"   {p}")
+        # 篇范围（不展示不精确的具体页码）
     
     if len(results) >= 5:
         parts.append(f"\n💡 找到 {len(results)} 个相关文件，建议细化关键词获取更精确结果。")

@@ -89,27 +89,13 @@ def search(q, mr=5):
             for w in terms:
                 if w in ls: ml.append(ls[:150]); break
             if len(ml)>=3: break
-        # 提取页码引用（含PDF跳转信息）
-        pp = []
-        for a in re.findall(r'<!-- 来源:.*?-->', t):
-            m = re.search(r'第(\d+)页', a)
-            pian_m = re.search(r'第(\d+)篇', a)
-            vol_m = re.search(r'第(\d+)卷', a)
-            if m and pian_m and vol_m:
-                vol_num = vol_m.group(1)
-                pian_num = pian_m.group(1)
-                page_num = m.group(1)
-                # 查反向映射得PDF页号
-                pdf_pn = _lookup_pdf_page(vol_num, pian_num, page_num)
-                label = f"第{vol_num}卷 第{pian_num}篇 第{page_num}页"
-                pp.append({"vol": vol_num, "page": pdf_pn or page_num, "label": label})
-            elif m and vol_m:
-                pp.append({"label": f"第{vol_m.group(1)}卷 第{m.group(1)}页"})
-        pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:3]
-        pp = [dict(t) for t in pp]
-        # 添加 GitHub 链接
+        # 篇范围（不展示不精确的具体页码）
+        sr = ''
+        sm = re.search(r'> \*\*来源标注：\*\*.*?第(\d+)卷.*?第(\d+)篇.*?》', t[:800])
+        if sm:
+            sr = f"第{sm.group(1)}卷 第{sm.group(2)}篇"
         gh_url = f"https://github.com/nasplycc/mechanical-design-handbook/blob/main/机械设计知识库/{rel}"
-        res.append({"file":rel,"gh":gh_url,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml,"pages":pp})
+        res.append({"file":rel,"gh":gh_url,"sr":sr,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml})
     res.sort(key=lambda r:-r["score"])
     return res[:mr]
 
@@ -167,10 +153,7 @@ function go(){
     let h=''
     d.r.forEach(r=>{
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
-      let pp=(r.pages||[]).map(p=>{
-        if(p.vol && p.page) return '<a href="/pdf/'+p.vol+'#page='+p.page+'" target="_blank" title="打开PDF到第'+p.page+'页">📄 '+p.label+'</a>'
-        return '<span>📄 '+p.label+'</span>'
-      }).join('')
+      let pp = r.sr ? '<span style="background:#e8f4fd;padding:2px 8px;border-radius:4px;font-size:12px;color:#636e72">📖 '+r.sr+' 范围</span>' : '';
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
       h+='<div class="r"><h2>📁 <a href="'+r.gh+'" target="_blank" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="'+r.gh+'" target="_blank" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">↗</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
