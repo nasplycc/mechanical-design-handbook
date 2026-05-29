@@ -40,7 +40,15 @@
 └── citation_search.py      ← 标注评论搜索（备用）
 ```
 
-## 🚀 快速开始
+## 🌐 在线访问 (GitHub Pages)
+
+无需部署，直接访问：
+
+**https://nasplycc.github.io/mechanical-design-handbook/**
+
+客户端侧 BM25 搜索，52 个知识库文件 76KB 索引，纯前端检索。
+
+## 🚀 本地启动
 
 ```bash
 # Web 界面
@@ -57,6 +65,8 @@
 ./run.sh mcp
 # → mcporter call mechanical-design.mechanical_search query="..."
 ```
+
+> 重新生成静态索引: `python3 build_static_index.py`（更新知识库后需要重新生成索引同步到 GitHub Pages）
 
 ## 📖 数据来源
 
