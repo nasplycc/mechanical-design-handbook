@@ -80,6 +80,9 @@ HTML = """<!DOCTYPE html>
 <html lang="zh-CN">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>📚 机械设计手册查询</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{font-family:-apple-system,sans-serif;background:#f5f6fa;color:#2d3436;max-width:900px;margin:0 auto;padding:20px}
@@ -136,6 +139,8 @@ function go(){
     })
     document.getElementById('rs').innerHTML=h
     document.getElementById('mt').textContent='🔍 '+q+' · '+d.r.length+'条 · '+d.t+'ms'
+    // 渲染 LaTeX 公式
+    try{renderMathInElement(document.getElementById('rs'),{delimiters:[{left:'$',right:'$',display:false},{left:'$$',right:'$$',display:true}],macros:{"\\text":"\\text"}})}catch(e){}
   }).catch(()=>{document.getElementById('ld').style.display='none';document.getElementById('rs').innerHTML='<p style="text-align:center;color:#e74c3c">❌ 失败</p>'})
 }
 </script></body></html>"""
