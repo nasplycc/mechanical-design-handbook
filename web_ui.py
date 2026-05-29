@@ -104,7 +104,7 @@ h1{font-size:24px}.s{display:flex;gap:8px;margin:16px 0}
 .r .p span{display:inline-block;margin:2px}
 .r .p a{display:inline-block;background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#e67e22;text-decoration:none;border:1px solid #ffe0b0;cursor:pointer}
 .r .p a:hover{background:#fef3e0;border-color:#e67e22}
-.r .p .no-link{background:#dfe6e9;padding:2px 10px;border-radius:4px;font-size:12px;color:#636e72}
+
 #ld{display:none;text-align:center;padding:30px;color:#636e72}
 #mt{font-size:12px;color:#b2bec3;text-align:center;margin-top:20px}
 </style></head>
@@ -136,10 +136,7 @@ function go(){
     let h=''
     d.r.forEach(r=>{
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
-      let pp=(r.pages||[]).map(p=>{
-        if(p.vol && p.page) return '<a href="/pdf/'+p.vol+'#page='+p.page+'" target="_blank" title="打开PDF到第'+p.page+'页">📄 第'+p.vol+'卷 第'+p.page+'页</a>'
-        return '<span class="no-link">📄 '+p.label+'</span>'
-      }).join('')
+      let pp=(r.pages||[]).map(p=>'<span>📄 '+p.label+'</span>').join('')
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
       h+='<div class="r"><h2>📁 '+r.file+'</h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
