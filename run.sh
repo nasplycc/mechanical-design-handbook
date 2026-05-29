@@ -24,6 +24,15 @@ case "${1:-web}" in
       python3 search.py "$query"
     fi
     ;;
+  wizard|design)
+    shift
+    query="${*:-}"
+    if [ -z "$query" ]; then
+      python3 wizard.py -i
+    else
+      python3 wizard.py "$query"
+    fi
+    ;;
   reindex)
     echo "📄 重建页码索引 (PDF)..."
     python3 pdf_annotate.py
@@ -36,13 +45,15 @@ case "${1:-web}" in
     echo "  MCP: mcporter call mechanical-design.mechanical_search query=\"test\""
     echo "  Web: http://localhost:5231"
     echo "  CLI: python3 search.py \"查询词\""
+    echo "  向导: ./run.sh wizard 齿轮齿条 10000N 3m"
     ;;
   *)
-    echo "用法: ./run.sh [web|mcp|cli|reindex|status]"
-    echo "  web     — 启动 Web 界面 (http://localhost:5231)"
-    echo "  mcp     — 启动 MCP stdio server"
-    echo "  cli     — CLI 查询 (如: ./run.sh cli 齿轮齿条)"
-    echo "  reindex — 重建PDF页码索引"
-    echo "  status  — 显示系统状态"
+    echo "用法: ./run.sh [web|mcp|cli|design|reindex|status]"
+    echo "  web      — Web 界面 (http://localhost:5231)"
+    echo "  mcp      — MCP stdio server"
+    echo "  cli      — CLI 查询 (如: ./run.sh cli 齿轮齿条)"
+    echo "  design   — 设计向导 (如: ./run.sh design 齿轮齿条 10000N 3m)"
+    echo "  reindex  — 重建 PDF 页码索引"
+    echo "  status   — 系统状态"
     ;;
 esac
