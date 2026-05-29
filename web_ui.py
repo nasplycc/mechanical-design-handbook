@@ -3,6 +3,29 @@ from pathlib import Path
 
 KB = Path("/vol2/1000/working/机械设计原理/机械设计知识库")
 BASE = Path("/vol2/1000/working/机械设计原理")
+
+# 加载印刷页码→PDF页码反向映射
+_PIAN_MAPS = {}
+def _load_pian_map(vol):
+    if vol in _PIAN_MAPS:
+        return _PIAN_MAPS[vol]
+    fp = BASE / f".pian_map_v{vol}.json"
+    if not fp.exists():
+        return None
+    with open(fp) as f:
+        raw = json.load(f)
+    # raw: {pdf_pn: [pian, printed_pn]} 转为 {(pian, printed_pn): pdf_pn}
+    rev = {}
+    for pdf_pn, (pian, printed_pn) in raw.items():
+        rev[(int(pian), int(printed_pn))] = int(pdf_pn)
+    _PIAN_MAPS[vol] = rev
+    return rev
+
+def _lookup_pdf_page(vol_num, pian, page):
+    m = _load_pian_map(vol_num)
+    if m is None:
+        return None
+    return m.get((int(pian), int(page)))
 EX = {"页码对照表","卷章篇索引","GB标准清单","JB标准清单","设计流程与规范","深化计划","README"}
 VOL_G = {"01":"第1卷","02":"第1卷","03":"第1卷","04":"第2卷","05":"第3卷","06":"第5卷","07":"第1卷","08":"第1卷"}
 PIAN_NAMES = {
@@ -66,14 +89,20 @@ def search(q, mr=5):
             for w in terms:
                 if w in ls: ml.append(ls[:150]); break
             if len(ml)>=3: break
-        # 提取页码引用（新版：篇-页号；旧版兼容：卷-页号）
+        # 提取页码引用（含PDF跳转信息）
         pp = []
         for a in re.findall(r'<!-- 来源:.*?-->', t):
             m = re.search(r'第(\d+)页', a)
             pian_m = re.search(r'第(\d+)篇', a)
             vol_m = re.search(r'第(\d+)卷', a)
             if m and pian_m and vol_m:
-                pp.append({"label": f"第{vol_m.group(1)}卷 第{pian_m.group(1)}篇 第{m.group(1)}页"})
+                vol_num = vol_m.group(1)
+                pian_num = pian_m.group(1)
+                page_num = m.group(1)
+                # 查反向映射得PDF页号
+                pdf_pn = _lookup_pdf_page(vol_num, pian_num, page_num)
+                label = f"第{vol_num}卷 第{pian_num}篇 第{page_num}页"
+                pp.append({"vol": vol_num, "page": pdf_pn or page_num, "label": label})
             elif m and vol_m:
                 pp.append({"label": f"第{vol_m.group(1)}卷 第{m.group(1)}页"})
         pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:8]
@@ -136,7 +165,10 @@ function go(){
     let h=''
     d.r.forEach(r=>{
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
-      let pp=(r.pages||[]).map(p=>'<span>📄 '+p.label+'</span>').join('')
+      let pp=(r.pages||[]).map(p=>{
+        if(p.vol && p.page) return '<a href="/pdf/'+p.vol+'#page='+p.page+'" target="_blank" title="打开PDF到第'+p.page+'页">📄 '+p.label+'</a>'
+        return '<span>📄 '+p.label+'</span>'
+      }).join('')
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
       h+='<div class="r"><h2>📁 '+r.file+'</h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
