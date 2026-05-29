@@ -148,14 +148,21 @@ function go(){
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
       let pp = r.sr ? '<a href="/pdf/'+r.sr_vol+'#page='+r.sr_pdf+'" target="_blank" style="background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#e67e22;text-decoration:none;border:1px solid #ffe0b0;display:inline-block">📖 '+r.sr+' ⬀</a>' : '';
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
-      h+='<div class="r"><h2>📁 <a href="view.html?file='+encodeURIComponent(r.file)+'&q='+encodeURIComponent(qq)+'" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="view.html?file='+encodeURIComponent(r.file)+'&q='+encodeURIComponent(qq)+'" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">📖</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
+      h+='<div class="r"><h2>📁 <a href="view.html?file='+encodeURIComponent(r.file)+'&q='+encodeURIComponent(q)+'" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="view.html?file='+encodeURIComponent(r.file)+'&q='+encodeURIComponent(q)+'" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">📖</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
     document.getElementById('rs').innerHTML=h
     document.getElementById('mt').textContent='🔍 '+q+' · '+d.r.length+'条 · '+d.t+'ms'
-    // 渲染 LaTeX 公式
-    try{renderMathInElement(document.getElementById('rs'),{delimiters:[{left:'$',right:'$',display:false},{left:'$$',right:'$$',display:true}],macros:{"\\text":"\\text"}})}catch(e){}
+    try{renderMathInElement(document.getElementById('rs'),{delimiters:[{left:'$',right:'$',display:false},{left:'$$',right:'$$',display:true}],macros:{"\text":"\text"}})}catch(e){}
   }).catch(()=>{document.getElementById('ld').style.display='none';document.getElementById('rs').innerHTML='<p style="text-align:center;color:#e74c3c">❌ 失败</p>'})
 }
+window.addEventListener('DOMContentLoaded',function(){
+  const urlQ = new URLSearchParams(window.location.search).get('q')
+  if(urlQ){
+    document.getElementById('q').value = urlQ
+    go()
+    window.history.replaceState({}, '', '.')
+  }
+})
 </script></body></html>"""
 
 class H(http.server.BaseHTTPRequestHandler):
@@ -166,7 +173,7 @@ class H(http.server.BaseHTTPRequestHandler):
         
         if path == "/s":
             q = params.get("q", [""])[0]
-        qq = q
+            qq = q
             import time; t0=time.time()
             r = search(q)
             dt = int((time.time()-t0)*1000)

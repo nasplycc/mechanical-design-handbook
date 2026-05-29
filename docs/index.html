@@ -96,7 +96,7 @@ fetch(SEARCH_URL + "?t=" + Date.now())
     // URL参数自动搜索
     const urlQ = new URLSearchParams(window.location.search).get("q");
     if (urlQ) {
-      document.getElementById("iq").value = urlQ;
+      document.getElementById("q").value = urlQ;
       dos(urlQ);
       // 替换URL，去掉?q=，避免刷新重复搜索
       window.history.replaceState({}, "", "./");
