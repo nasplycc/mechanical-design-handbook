@@ -110,22 +110,51 @@ def detect_scene(query):
     return scene_name, steps, params
 
 
-def render_design_report(scene, steps, params, results):
+def render_design_report(scene, steps, params, results, telegram=False):
     """渲染设计报告"""
+    if telegram:
+        # Telegram 精简版
+        lines = [f"⚙️ {scene}", ""]
+        if params:
+            parts = []
+            for k, v in params.items():
+                parts.append(f"{k}:{v}")
+            lines.append("📋 " + " | ".join(parts))
+        
+        lines.append(f"\n📐 {len(steps)}步流程")
+        for i, step in enumerate(steps, 1):
+            lines.append(f"  {i}.{step}")
+        
+        if results:
+            lines.append(f"\n📖 手册")
+            for r in results[:3]:
+                loc = f"{r['vol']}" if r['vol'] else ""
+                if r.get('pian'): loc += f" {r['pian']}"
+                pages = r['pages'][:2]
+                pages_str = " | ".join(pages) if pages else ""
+                lines.append(f"  • {r['file']}")
+                if pages_str: lines.append(f"    📄 {pages_str}")
+        
+        lines.append(f"\n💡 建议")
+        for s in generate_suggestions(scene, params):
+            lines.append(f"  {s}")
+        
+        lines.append("")
+        lines.append("🌐 Web: http://localhost:5231/")
+        return "\n".join(lines)
+    
+    # 终端完整版
     lines = [f"⚙️ {scene} 设计报告", "=" * 45]
     
-    # 设计输入
     if params:
         lines.append("\n📋 设计输入")
         for k, v in params.items():
             lines.append(f"  {k}: {v}")
     
-    # 设计流程
     lines.append(f"\n📐 设计流程（{len(steps)}步）")
     for i, step in enumerate(steps, 1):
         lines.append(f"  {i}. {step}")
     
-    # 搜索结果
     if results:
         lines.append(f"\n📖 手册引用")
         for r in results[:4]:
@@ -139,10 +168,9 @@ def render_design_report(scene, steps, params, results):
             if r.get('pages'):
                 lines.append(f"  📄 {' | '.join(r['pages'][:3])}")
     
-    # 设计向导建议
     lines.append(f"\n💡 设计向导建议")
-    suggestions = generate_suggestions(scene, params)
-    lines.extend(suggestions)
+    for s in generate_suggestions(scene, params):
+        lines.append(s)
     
     lines.append(f"\n{'=' * 45}")
     lines.append(f"📌 详细计算请参考对应手册页码")

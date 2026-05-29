@@ -11,6 +11,31 @@ import json, os, re, sys
 from collections import defaultdict
 from pathlib import Path
 
+# BM25 语义搜索兜底
+_BM25 = None
+def _ensure_bm25():
+    global _BM25
+    if _BM25 is not None:
+        return _BM25
+    t0 = __import__('time').time()
+    from bm25_search import BM25Search
+    bm = BM25Search(cache_path=str(BASE / '.bm25_index.json'))
+    if not bm.load_cache():
+        # 构建索引
+        docs = []
+        KB2 = Path(str(KB))
+        EX2 = {"页码对照表","卷章篇索引","GB标准清单","JB标准清单","设计流程与规范","深化计划","README",".gitignore"}
+        for p in sorted(KB2.rglob("*.md")):
+            if p.stem in EX2: continue
+            try:
+                t = p.read_text("utf-8")
+            except: continue
+            rel = str(p.relative_to(KB2))
+            docs.append({"id": rel, "text": re.sub(r'<!--.*?-->', '', t)})
+        bm.fit(docs)
+    _BM25 = bm
+    return bm
+
 BASE = Path("/vol2/1000/working/机械设计原理")
 KB = BASE / "机械设计知识库"
 EX = {"页码对照表","卷章篇索引","GB标准清单","JB标准清单","设计流程与规范","深化计划","README"}
@@ -85,7 +110,7 @@ def parse_query(nl_query):
 
 
 def search_kb(keywords, max_results=5):
-    """搜索知识库"""
+    """搜索知识库（关键词 + BM25 语义兜底）"""
     # 扫描所有文件
     results = []
     for md_path in KB.rglob("*.md"):
@@ -139,14 +164,91 @@ def search_kb(keywords, max_results=5):
         })
     
     results.sort(key=lambda r: -r["score"])
+    
+    # BM25 语义兜底：关键词无结果 / 少于2条 / 最高分太低(<=50) 时触发
+    top_score = results[0]["score"] if results else 0
+    if (len(results) < 2 or top_score <= 50) and keywords:
+        try:
+            bm = _ensure_bm25()
+            query_str = " ".join(keywords)
+            bm_results = bm.search(query_str, top_k=max_results)
+            if bm_results:
+                # 合并，避免关键词结果被覆盖
+                bm_ids = {d["id"] for d in bm_results}
+                kw_ids = {r["file"] for r in results}
+                for bd in bm_results:
+                    if bd["id"] not in kw_ids:
+                        # 读取文件获取详细信息
+                        fp = KB / bd["id"]
+                        if fp.exists():
+                            t = fp.read_text("utf-8", errors="replace")
+                            rel = bd["id"]
+                            vol = VOL_G.get(Path(rel).parent.name[:2], "")
+                            pian = ""
+                            for m in re.finditer(r'第\d+篇', t[:500]):
+                                pian = m.group(0); break
+                            annotations = [l for l in t.split("\n") if l.strip().startswith("<!--") and "来源" in l]
+                            pages = []
+                            for a in annotations:
+                                m = re.search(r'第(\d+)页', a)
+                                vm = re.search(r'第(\d+)卷', a)
+                                if m and vm:
+                                    p = f"第{vm.group(1)}卷 第{m.group(1)}页"
+                                    if p not in pages: pages.append(p)
+                            results.append({
+                                "file": rel,
+                                "score": round(bd.get("bm25_score", 0) * 100),
+                                "vol": vol, "pian": pian,
+                                "pian_name": PIAN_NAMES.get(pian, ""),
+                                "matches": [f"[BM25 语义匹配] {bd.get('bm25_score', 0):.3f}"],
+                                "pages": pages[:8],
+                            })
+                results.sort(key=lambda r: -r["score"])
+        except Exception as e:
+            pass  # BM25 可用
+    
     return results[:max_results]
 
 
-def format_search_results(results, query, max_r=5):
-    """格式化搜索结果"""
+def format_search_results(results, query, max_r=5, telegram=False):
+    """格式化搜索结果
+    telegram=True 时精简输出 + 生成网页链接
+    """
     if not results:
-        return f"未找到与「{query}」相关的设计资料，请尝试更精简的关键词。"
+        return f"未找到与「{query}」相关的设计资料"
     
+    if telegram:
+        # Telegram 精简版
+        lines = [f"📖 {query}", ""]
+        for i, r in enumerate(results[:max_r], 1):
+            loc = f"{r['vol']} {r['pian']}" if r['pian'] else r['vol']
+            if r['pian_name'] and not r['pian'] in loc:
+                loc += f" {r['pian_name']}"
+            lines.append(f"{i}. {r['file']}")
+            lines.append(f"   📍 {loc}")
+            # 只显示页码链接或简短匹配
+            pages_shown = r['pages'][:3]
+            if pages_shown:
+                page_links = []
+                for p in pages_shown:
+                    m = re.search(r'第(\d+)卷.*?第(\d+)页', p)
+                    if m:
+                        page_links.append(f"/pdf/{m.group(1)}#page={m.group(2)}")
+                    else:
+                        page_links.append(p)
+                if page_links:
+                    lines.append(f"   📄 {' | '.join(page_links)}")
+            if r['matches']:
+                # 简短摘要
+                summary = r['matches'][0][:80]
+                lines.append(f"   {summary}")
+            lines.append("")
+        
+        lines.append(f"🌐 http://localhost:5231  → Web 查看完整内容")
+        lines.append(f"💡 共 {len(results)} 个文件相关")
+        return "\n".join(lines)
+    
+    # 终端完整版
     parts = [f"📖 搜索设计资料：{query}", "=" * 40]
     
     for i, r in enumerate(results, 1):
