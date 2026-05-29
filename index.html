@@ -191,5 +191,15 @@ function go(){
   document.getElementById("ft").textContent = "🔍 "+q+" · "+results.length+" 条结果";
 }
 </script>
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" 
+  style="display:none;position:fixed;bottom:30px;right:30px;width:44px;height:44px;
+  background:#0984e3;color:#fff;border:none;border-radius:50%;font-size:22px;
+  cursor:pointer;z-index:999;box-shadow:0 2px 12px rgba(0,0,0,0.2);
+  transition:opacity 0.3s;opacity:0.85">⬆</button>
+<script>
+window.addEventListener('scroll',function(){
+  document.getElementById('topBtn').style.display=window.scrollY>300?'block':'none';
+});
+</script>
 </body>
 </html>
