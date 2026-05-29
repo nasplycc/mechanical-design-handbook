@@ -1,7 +1,8 @@
-import http.server, json, re, urllib.parse
+import http.server, json, re, urllib.parse, os, mimetypes
 from pathlib import Path
 
 KB = Path("/vol2/1000/working/机械设计原理/机械设计知识库")
+BASE = Path("/vol2/1000/working/机械设计原理")
 EX = {"页码对照表","卷章篇索引","GB标准清单","JB标准清单","设计流程与规范","深化计划","README"}
 VOL_G = {"01":"第1卷","02":"第1卷","03":"第1卷","04":"第2卷","05":"第3卷","06":"第5卷","07":"第1卷","08":"第1卷"}
 PIAN_NAMES = {
@@ -14,6 +15,15 @@ PIAN_NAMES = {
     "第18篇":"常用电机、电器及电动(液)推杆与升降机",
     "第19篇":"机械振动的控制及利用","第20篇":"机架设计",
     "第21篇":"液压传动","第22篇":"液压控制","第23篇":"气压传动",
+}
+
+# PDF 文件映射
+PDF_FILES = {
+    "1": BASE / "机械设计手册 第六版 第1卷.PDF",
+    "2": BASE / "机械设计手册 第六版 第2卷.PDF",
+    "3": BASE / "-机械设计手册 第六版 第3卷.PDF",
+    "4": BASE / "-机械设计手册 第六版 第4卷.PDF",
+    "5": BASE / "-机械设计手册 第六版 第5卷.PDF",
 }
 
 print("📚 加载知识库...", file=__import__('sys').stderr)
@@ -56,7 +66,12 @@ def search(q, mr=5):
             for w in terms:
                 if w in ls: ml.append(ls[:150]); break
             if len(ml)>=3: break
-        pp = list(dict.fromkeys(f"第{m.group(1)}卷 第{m.group(2)}页" for m in re.finditer(r'来源:.*?第(\d+)卷.*?第(\d+)页', t)))[:6]
+        # 提取带卷号和页码的结构化引用
+        pp = []
+        for m in re.finditer(r'来源:.*?第(\d+)卷.*?第(\d+)页', t):
+            pp.append({"vol":m.group(1), "page":m.group(2), "label":f"第{m.group(1)}卷 第{m.group(2)}页"})
+        pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:6]
+        pp = [dict(t) for t in pp]
         res.append({"file":rel,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml,"pages":pp})
     res.sort(key=lambda r:-r["score"])
     return res[:mr]
@@ -66,6 +81,7 @@ HTML = """<!DOCTYPE html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>📚 机械设计手册查询</title>
 <style>
+*{box-sizing:border-box}
 body{font-family:-apple-system,sans-serif;background:#f5f6fa;color:#2d3436;max-width:900px;margin:0 auto;padding:20px}
 h1{font-size:24px}.s{display:flex;gap:8px;margin:16px 0}
 .s input{flex:1;padding:12px;border:2px solid #dfe6e9;border-radius:10px;font-size:15px;outline:none}
@@ -76,13 +92,16 @@ h1{font-size:24px}.s{display:flex;gap:8px;margin:16px 0}
 .r h2{font-size:14px;color:#0984e3;margin:0 0 4px}
 .r .l{font-size:12px;color:#636e72;margin-bottom:4px}
 .r .m{font-size:13px;color:#555;line-height:1.6;padding-left:8px;border-left:3px solid #dfe6e9;margin:8px 0}
-.r .p span{display:inline-block;background:#e8f4fd;padding:2px 8px;border-radius:4px;font-size:12px;margin:2px;color:#0984e3}
+.r .p span{display:inline-block;margin:2px}
+.r .p a{display:inline-block;background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#e67e22;text-decoration:none;border:1px solid #ffe0b0;cursor:pointer}
+.r .p a:hover{background:#fef3e0;border-color:#e67e22}
+.r .p .no-link{background:#dfe6e9;padding:2px 10px;border-radius:4px;font-size:12px;color:#636e72}
 #ld{display:none;text-align:center;padding:30px;color:#636e72}
 #mt{font-size:12px;color:#b2bec3;text-align:center;margin-top:20px}
 </style></head>
 <body>
 <h1>📚 机械设计手册</h1>
-<p style="font-size:13px;color:#636e72">成大先主编 · 5卷8512页 · 精确页码引用</p>
+<p style="font-size:13px;color:#636e72">成大先主编 · 5卷8512页 · 点页码直接跳转PDF</p>
 <div class="s"><input id="q" placeholder="如：齿轮齿条 / 45号钢热处理 / 深沟球轴承" onkeydown="if(event.key==='Enter')go()"><button onclick="go()">查询</button></div>
 <div class="q">
 <a href="javascript:setQ('齿轮齿条机构')">⚙️ 齿轮齿条</a>
@@ -108,7 +127,10 @@ function go(){
     let h=''
     d.r.forEach(r=>{
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
-      let pp=(r.pages||[]).map(p=>'<span>📄 '+p+'</span>').join('')
+      let pp=(r.pages||[]).map(p=>{
+        if(p.vol && p.page) return '<a href="/pdf/'+p.vol+'#page='+p.page+'" target="_blank" title="打开PDF到第'+p.page+'页">📄 第'+p.vol+'卷 第'+p.page+'页</a>'
+        return '<span class="no-link">📄 '+p.label+'</span>'
+      }).join('')
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
       h+='<div class="r"><h2>📁 '+r.file+'</h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
@@ -120,19 +142,75 @@ function go(){
 
 class H(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
-        if urllib.parse.urlparse(self.path).path=="/s":
-            q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("q",[""])[0]
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+        params = urllib.parse.parse_qs(parsed.query)
+        
+        if path == "/s":
+            q = params.get("q", [""])[0]
             import time; t0=time.time()
             r = search(q)
             dt = int((time.time()-t0)*1000)
             self.send_response(200); self.send_header("Content-Type","application/json;charset=utf-8")
             self.send_header("Access-Control-Allow-Origin","*"); self.end_headers()
             self.wfile.write(json.dumps({"r":r,"t":dt},ensure_ascii=False).encode())
-        else:
-            self.send_response(200); self.send_header("Content-Type","text/html;charset=utf-8")
+            return
+        
+        # PDF 直跳: /pdf/3#page=820
+        if path.startswith("/pdf/"):
+            vol_num = path[5:].strip("/")
+            pdf_path = PDF_FILES.get(vol_num)
+            if pdf_path and pdf_path.exists():
+                size = pdf_path.stat().st_size
+                range_hdr = self.headers.get("Range")
+                encoded_name = urllib.parse.quote(f'di{vol_num}juan.PDF')
+                if range_hdr:
+                    # 支持 Range 分段下载（浏览器PDF查看器需要）
+                    m = re.match(r"bytes=(\d+)-(\d*)", range_hdr)
+                    if m:
+                        start = int(m.group(1))
+                        end = int(m.group(2)) if m.group(2) else size - 1
+                        cl = end - start + 1
+                        self.send_response(206)
+                        self.send_header("Content-Type","application/pdf")
+                        self.send_header("Content-Range",f"bytes {start}-{end}/{size}")
+                        self.send_header("Content-Length",str(cl))
+                        self.send_header("Accept-Ranges","bytes")
+                        self.end_headers()
+                        with open(pdf_path,"rb") as f:
+                            f.seek(start)
+                            remaining = cl
+                            while remaining:
+                                chunk = f.read(min(65536, remaining))
+                                if not chunk: break
+                                self.wfile.write(chunk)
+                                remaining -= len(chunk)
+                        return
+                # 全量返回（流式分块）
+                self.send_response(200)
+                self.send_header("Content-Type","application/pdf")
+                self.send_header("Content-Length",str(size))
+                self.send_header("Accept-Ranges","bytes")
+                self.send_header("Content-Disposition", f"inline; filename*=UTF-8''{encoded_name}")
+                self.send_header("X-Frame-Options", "SAMEORIGIN")
+                self.end_headers()
+                with open(pdf_path,"rb") as f:
+                    while True:
+                        chunk = f.read(65536)
+                        if not chunk: break
+                        self.wfile.write(chunk)
+                return
+            self.send_response(404)
             self.end_headers()
-            self.wfile.write(HTML.encode("utf-8"))
-    def log_message(self,*a): pass
+            self.wfile.write(b"PDF not found")
+            return
+        
+        # HTML 页面
+        self.send_response(200); self.send_header("Content-Type","text/html;charset=utf-8")
+        self.end_headers()
+        self.wfile.write(HTML.encode("utf-8"))
+    
+    def log_message(self, *a): pass
 
-if __name__=="__main__":
-    http.server.HTTPServer(("0.0.0.0",5231),H).serve_forever()
+if __name__ == "__main__":
+    http.server.HTTPServer(("0.0.0.0",5231), H).serve_forever()

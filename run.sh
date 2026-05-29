@@ -43,9 +43,9 @@ case "${1:-web}" in
     echo "  知识库: $(find 机械设计知识库 -name '*.md' | wc -l) 个文件"
     echo "  卷: 5卷 (2017+1693+1640+1316+1846=8512页)"
     echo "  MCP: mcporter call mechanical-design.mechanical_search query=\"test\""
-    echo "  Web: http://localhost:5231"
+    echo "  Web: http://localhost:5231 （点页码直接打开PDF）"
     echo "  CLI: python3 search.py \"查询词\""
-    echo "  向导: ./run.sh wizard 齿轮齿条 10000N 3m"
+    echo "  向导: ./run.sh design 齿轮齿条 10000N 3m"
     ;;
   *)
     echo "用法: ./run.sh [web|mcp|cli|design|reindex|status]"
