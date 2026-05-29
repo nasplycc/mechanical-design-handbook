@@ -66,11 +66,17 @@ def search(q, mr=5):
             for w in terms:
                 if w in ls: ml.append(ls[:150]); break
             if len(ml)>=3: break
-        # 提取带卷号和页码的结构化引用
+        # 提取页码引用（新版：篇-页号；旧版兼容：卷-页号）
         pp = []
-        for m in re.finditer(r'来源:.*?第(\d+)卷.*?第(\d+)页', t):
-            pp.append({"vol":m.group(1), "page":m.group(2), "label":f"第{m.group(1)}卷 第{m.group(2)}页"})
-        pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:6]
+        for a in re.findall(r'<!-- 来源:.*?-->', t):
+            m = re.search(r'第(\d+)页', a)
+            pian_m = re.search(r'第(\d+)篇', a)
+            vol_m = re.search(r'第(\d+)卷', a)
+            if m and pian_m:
+                pp.append({"label": f"第{pian_m.group(1)}篇 第{m.group(1)}页"})
+            elif m and vol_m:
+                pp.append({"vol": vol_m.group(1), "page": m.group(1), "label": f"第{vol_m.group(1)}卷 第{m.group(1)}页"})
+        pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:8]
         pp = [dict(t) for t in pp]
         res.append({"file":rel,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml,"pages":pp})
     res.sort(key=lambda r:-r["score"])

@@ -58,8 +58,8 @@ def main():
                 headings.append({"l":len(m.group(1)), "t":t})
         
         pages = list(dict.fromkeys(
-            f"第{m.group(1)}卷 第{m.group(2)}页"
-            for m in re.finditer(r'来源:.*?第(\d+)卷.*?第(\d+)页', raw)
+            f"第{m.group(1)}篇 第{m.group(2)}页"
+            for m in re.finditer(r'来源:.*?第(\d+)篇.*?第(\d+)页', raw)
         ))[:8]
         
         snippets = []
