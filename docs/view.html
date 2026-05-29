@@ -56,6 +56,16 @@ if (!file) {
       document.getElementById("ld").style.display = "none";
       document.getElementById("content").innerHTML = html;
       
+      // 为所有heading添加GitHub兼容的ID，使目录链接可点击跳转
+      document.querySelectorAll('.content h1, .content h2, .content h3, .content h4').forEach(h => {
+        const id = h.textContent.toLowerCase()
+          .replace(/[^\w\u4e00-\u9fff\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+        h.id = id;
+      });
+      
       // KaTeX 渲染
       try {
         if (window.renderMathInElement) {
