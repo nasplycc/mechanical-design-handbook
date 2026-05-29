@@ -37,7 +37,8 @@ h1 a{font-size:13px;color:#0984e3;text-decoration:none;font-weight:400}
 <div class="content" id="content"></div>
 
 <script>
-const GITHUB_RAW = "https://raw.githubusercontent.com/nasplycc/mechanical-design-handbook/main/机械设计知识库/";
+const isLocal = window.location.host !== "nasplycc.github.io";
+const RAW_BASE = isLocal ? "/raw/" : "https://raw.githubusercontent.com/nasplycc/mechanical-design-handbook/main/机械设计知识库/";
 const params = new URLSearchParams(window.location.search);
 const file = params.get("file");
 
@@ -48,7 +49,7 @@ if (!file) {
   document.getElementById("breadcrumb").innerHTML = "📁 " + file.replace(/\//g, " → ");
   document.getElementById("title").textContent = file.split("/").pop().replace(".md", "");
   
-  fetch(GITHUB_RAW + file)
+  fetch(RAW_BASE + file)
     .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
     .then(md => {
       const html = marked.parse(md);

@@ -148,7 +148,7 @@ function go(){
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
       let pp = r.sr ? '<a href="/pdf/'+r.sr_vol+'#page='+r.sr_pdf+'" target="_blank" style="background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#e67e22;text-decoration:none;border:1px solid #ffe0b0;display:inline-block">📖 '+r.sr+' ⬀</a>' : '';
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
-      h+='<div class="r"><h2>📁 <a href="'+r.gh+'" target="_blank" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="'+r.gh+'" target="_blank" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">↗</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
+      h+='<div class="r"><h2>📁 <a href="view.html?file='+encodeURIComponent(r.file)+'" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="view.html?file='+encodeURIComponent(r.file)+'" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">📖</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
     document.getElementById('rs').innerHTML=h
     document.getElementById('mt').textContent='🔍 '+q+' · '+d.r.length+'条 · '+d.t+'ms'
@@ -172,6 +172,29 @@ class H(http.server.BaseHTTPRequestHandler):
             self.send_response(200); self.send_header("Content-Type","application/json;charset=utf-8")
             self.send_header("Access-Control-Allow-Origin","*"); self.end_headers()
             self.wfile.write(json.dumps({"r":r,"t":dt},ensure_ascii=False).encode())
+            return
+        
+        # view.html 页面
+        if path == "/view.html":
+            vp = BASE / "view.html"
+            if vp.exists():
+                self.send_response(200); self.send_header("Content-Type","text/html;charset=utf-8")
+                self.send_header("Access-Control-Allow-Origin","*"); self.end_headers()
+                self.wfile.write(vp.read_bytes())
+            else:
+                self.send_response(404); self.end_headers(); self.wfile.write(b"view.html not found")
+            return
+        
+        # 本地MD渲染: /raw/04_零部件设计/深化_轴承完整选型表.md
+        if path.startswith("/raw/"):
+            rel_fn = urllib.parse.unquote(path[5:])
+            fp = KB / rel_fn
+            if fp.exists() and fp.is_file() and fp.suffix == ".md":
+                self.send_response(200); self.send_header("Content-Type","text/markdown;charset=utf-8")
+                self.send_header("Access-Control-Allow-Origin","*"); self.end_headers()
+                self.wfile.write(fp.read_bytes())
+            else:
+                self.send_response(404); self.end_headers(); self.wfile.write(b"MD file not found")
             return
         
         # PDF 直跳: /pdf/3#page=820
