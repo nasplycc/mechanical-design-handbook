@@ -1,0 +1,4 @@
+# 缓存索引 - 不提交
+.citation_*.json
+.page_index.json
+.pdf_page_index.json
