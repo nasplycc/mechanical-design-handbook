@@ -44,7 +44,9 @@ const file = params.get("file");
 
 if (!file) {
   document.getElementById("ld").textContent = "❌ 未指定文件参数 ?file=...";
-  document.getElementById("back").textContent = "← 返回";
+  const srchQ = params.get("q") || "";
+  document.getElementById("back").href = srchQ ? "./?q=" + encodeURIComponent(srchQ) : ".";
+  if (!srchQ) document.getElementById("back").textContent = "← 返回";
 } else {
   document.getElementById("breadcrumb").innerHTML = "📁 " + file.replace(/\//g, " → ");
   document.getElementById("title").textContent = file.split("/").pop().replace(".md", "");

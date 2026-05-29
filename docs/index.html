@@ -93,6 +93,14 @@ fetch(SEARCH_URL + "?t=" + Date.now())
     document.getElementById("ld").style.display = "none";
     document.getElementById("rs").innerHTML = '<p style="text-align:center;color:#636e72;padding:40px">🔎 输入关键词搜索 · 共 <strong>' + allFiles.length + '</strong> 个知识库文件</p>';
     renderSceneTags();
+    // URL参数自动搜索
+    const urlQ = new URLSearchParams(window.location.search).get("q");
+    if (urlQ) {
+      document.getElementById("iq").value = urlQ;
+      dos(urlQ);
+      // 替换URL，去掉?q=，避免刷新重复搜索
+      window.history.replaceState({}, "", "./");
+    }
   })
   .catch(e => {
     document.getElementById("ld").style.display = "none";
