@@ -9,8 +9,11 @@
 .kb_index.json
 .page_index.json
 .pdf_page_index.json
+.bm25_index.json
+.vector_index.json
 __pycache__/
 *.pyc
+*.pyo
 
 # 系统文件
 .DS_Store
