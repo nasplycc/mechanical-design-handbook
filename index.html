@@ -179,9 +179,9 @@ function go(){
       const hl = s;
       return hl;
     }).join("<br>");
-    const pages = (doc.pg||[]).slice(0,4).map(p => '<span>📄 '+p+'</span>').join("");
+    const pages = (doc.pg||[]).slice(0,3).map(p => '<span>📄 '+p+'</span>').join("");
     const tags = (doc.t||[]).map(t => '<span>#'+t+'</span>').join("");
-    h += '<div class="r"><h2>📁 '+doc.f+'</h2><div class="l">📍 '+loc+'</div>'+
+    h += '<div class="r"><h2>📁 <a href="'+doc.gh+'" target="_blank" style="color:#0984e3;text-decoration:none">'+doc.f+'</a> <a href="'+doc.gh+'" target="_blank" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">↗</a></h2><div class="l">📍 '+loc+'</div>'+
       (snippets?'<div class="m">'+snippets+'</div>':'')+
       (pages?'<div class="p">'+pages+'</div>':'')+
       (tags?'<div class="t">'+tags+'</div>':'')+'</div>';

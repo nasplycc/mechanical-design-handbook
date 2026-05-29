@@ -105,9 +105,11 @@ def search(q, mr=5):
                 pp.append({"vol": vol_num, "page": pdf_pn or page_num, "label": label})
             elif m and vol_m:
                 pp.append({"label": f"第{vol_m.group(1)}卷 第{m.group(1)}页"})
-        pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:8]
+        pp = list(dict.fromkeys(tuple(p.items()) for p in pp))[:3]
         pp = [dict(t) for t in pp]
-        res.append({"file":rel,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml,"pages":pp})
+        # 添加 GitHub 链接
+        gh_url = f"https://github.com/nasplycc/mechanical-design-handbook/blob/main/机械设计知识库/{rel}"
+        res.append({"file":rel,"gh":gh_url,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml,"pages":pp})
     res.sort(key=lambda r:-r["score"])
     return res[:mr]
 
@@ -170,7 +172,7 @@ function go(){
         return '<span>📄 '+p.label+'</span>'
       }).join('')
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
-      h+='<div class="r"><h2>📁 '+r.file+'</h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
+      h+='<div class="r"><h2>📁 <a href="'+r.gh+'" target="_blank" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="'+r.gh+'" target="_blank" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">↗</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })
     document.getElementById('rs').innerHTML=h
     document.getElementById('mt').textContent='🔍 '+q+' · '+d.r.length+'条 · '+d.t+'ms'

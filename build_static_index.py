@@ -27,6 +27,8 @@ PIAN_VOL = {"第1篇":"第1卷","第2篇":"第1卷","第3篇":"第1卷","第4篇
     "第16篇":"第3卷","第17篇":"第4卷","第18篇":"第5卷","第19篇":"第5卷","第20篇":"第5卷",
     "第21篇":"第4卷","第22篇":"第4卷","第23篇":"第5卷",
 }
+GITHUB_BASE = "https://github.com/nasplycc/mechanical-design-handbook/blob/main/机械设计知识库"
+
 SCENE_TAGS = {
     "传动":["齿轮传动","带传动","链传动"],"齿轮":["齿轮","齿条","齿轮齿条","模数"],
     "轴承":["深沟球","角接触","圆锥滚子","轴承寿命"],"液压":["液压泵","液压缸","液压回路"],
@@ -60,7 +62,7 @@ def main():
         pages = list(dict.fromkeys(
             f"第{m.group(1)}卷 第{m.group(2)}篇 第{m.group(3)}页"
             for m in re.finditer(r'来源:.*?第(\d+)卷.*?第(\d+)篇.*?第(\d+)页', raw)
-        ))[:8]
+        ))[:3]
         
         snippets = []
         for line in text.split("\n"):
@@ -82,7 +84,7 @@ def main():
         top_kws = [w for w,c in freq.most_common(20) if c >= 3][:20]
         
         index.append({
-            "f": rel, "v": vol or pv, "p": pian, "pn": PIAN_NAMES.get(pian, ""),
+            "f": rel, "gh": f"{GITHUB_BASE}/{rel}", "v": vol or pv, "p": pian, "pn": PIAN_NAMES.get(pian, ""),
             "h": headings[:15], "s": snippets, "pg": pages,
             "t": tags, "kw": top_kws,
         })
