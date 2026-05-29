@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>📚 机械设计手册 知识库</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6fa;color:#2d3436;max-width:960px;margin:0 auto;padding:20px}
@@ -26,8 +23,8 @@ h1 span{font-size:14px;color:#636e72;font-weight:400}
 #st{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;align-items:center}
 #st a{padding:4px 10px;border-radius:14px;font-size:12px;background:#e8f4fd;color:#0984e3;text-decoration:none;cursor:pointer}
 #st a:hover{background:#d0ecfc}
-#st .act{background:#0984e3;color:#fff}
 #ld{display:none;text-align:center;padding:40px;color:#636e72;font-size:15px}
+.notice{background:#fef3e0;border:1px solid #f0c040;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:14px;color:#7a5800}
 #rs{min-height:100px}
 .r{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid #eee;transition:.15s}
 .r:hover{border-color:#dfe6e9}
@@ -37,11 +34,10 @@ h1 span{font-size:14px;color:#636e72;font-weight:400}
 .r .m span{background:#fff3cd;padding:0 2px;border-radius:2px}
 .r .p{display:flex;flex-wrap:wrap;gap:4px;margin:3px 0}
 .r .p span{display:inline-block;background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#636e72;margin:2px;border:1px solid #e0e0e0}
-.r .p a:hover{background:#fef3e0;border-color:#e67e22}
 .r .t{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .r .t span{font-size:11px;padding:1px 7px;border-radius:4px;background:#f0f0f0;color:#636e72}
 #ft{font-size:12px;color:#b2bec3;text-align:center;margin-top:20px;padding:12px}
-@media(prefers-color-scheme:dark){body{background:#1a1a2e;color:#e0e0e0}.r{background:#16213e;border-color:#2a2a4a}.r:hover{border-color:#3a3a5a}.s input{background:#16213e;border-color:#2a2a4a;color:#e0e0e0}.q a{background:#2a2a4a;color:#b0b0b0}.q a:hover{background:#3a3a5a}.r .p span{background:#1a2a3e;border-color:#2a4a5a;color:#8899aa}.r .m{border-color:#2a2a4a}#st a{background:#1a2a3e;color:#5aa3e6}}
+@media(prefers-color-scheme:dark){body{background:#1a1a2e;color:#e0e0e0}.r{background:#16213e;border-color:#2a2a4a}.r:hover{border-color:#3a3a5a}.s input{background:#16213e;border-color:#2a2a4a;color:#e0e0e0}.q a{background:#2a2a4a;color:#b0b0b0}.q a:hover{background:#3a3a5a}.r .m{border-color:#2a2a4a}.r .p span{background:#1a2a3e;border-color:#2a4a5a;color:#8899aa}#st a{background:#1a2a3e;color:#5aa3e6}}
 </style>
 </head>
 <body>
@@ -72,9 +68,8 @@ h1 span{font-size:14px;color:#636e72;font-weight:400}
 
 <div id="st"></div>
 
-<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:14px;color:#856404">
-  📌 页码需自行翻阅《机械设计手册》第六版对应位置查看。本机版支持 PDF 直接跳转。<br>
-  <span style="font-size:12px">本地部署: <code style="background:#fff;padding:1px 6px;border-radius:3px">./run.sh web</code> → <code style="background:#fff;padding:1px 6px;border-radius:3px">http://localhost:5231</code></span>
+<div class="notice">
+  📖 页码为原手册的篇-页号（如 15-625 = 第15篇第625页），请在《机械设计手册》第六版对应卷册中查阅
 </div>
 
 <div id="ld">🔍 加载索引中...</div>
@@ -88,33 +83,27 @@ h1 span{font-size:14px;color:#636e72;font-weight:400}
 <div id="ft"></div>
 
 <script>
-// ── 加载搜索索引 ──
 const SEARCH_URL = "https://raw.githubusercontent.com/nasplycc/mechanical-design-handbook/gh-pages/static_search.json";
-let indexData = null;
 let allFiles = [];
 
 fetch(SEARCH_URL + "?t=" + Date.now())
   .then(r => { if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
   .then(d => {
-    indexData = d;
     allFiles = d.index;
     document.getElementById("ld").style.display = "none";
     document.getElementById("rs").innerHTML = '<p style="text-align:center;color:#636e72;padding:40px">🔎 输入关键词搜索 · 共 <strong>' + allFiles.length + '</strong> 个知识库文件</p>';
     renderSceneTags();
   })
   .catch(e => {
-    console.error(e);
     document.getElementById("ld").style.display = "none";
     document.getElementById("rs").innerHTML = '<p style="text-align:center;color:#e74c3c;padding:40px">❌ 索引加载失败，请刷新重试</p>';
   });
 
+const SCENES = ["传动","齿轮","轴承","液压","气压","材料","弹簧","螺纹","键","润滑","电机","振动","公差","焊接"];
 function renderSceneTags() {
-  const scenes = ["传动","齿轮","轴承","液压","气压","材料","弹簧","螺纹","键","润滑","电机","振动","公差","焊接"];
-  let h = scenes.map(s => '<a onclick="setQ(\''+s+'\')">#' + s + '</a>').join(" ");
-  document.getElementById("st").innerHTML = h;
+  document.getElementById("st").innerHTML = SCENES.map(s => '<a onclick="setQ(\''+s+'\')">#'+s+'</a>').join(" ");
 }
 
-// ── 分词（供搜索用） ──
 function tokenize(text) {
   const words = new Set();
   const cn = text.match(/[\u4e00-\u9fff]/g) || [];
@@ -126,155 +115,79 @@ function tokenize(text) {
   return [...words];
 }
 
-// ── BM25 搜索 ──
 function bm25(query, topK) {
   if (!allFiles.length) return [];
   const qTokens = tokenize(query);
   if (!qTokens.length) return [];
-  
-  // Build term->doc frequency from index (updated first run)
   if (!bm25._idf) {
     const N = allFiles.length;
     const df = {};
     for (let i = 0; i < N; i++) {
       const doc = allFiles[i];
-      // Use headings + tags + keywords as indexed text
-      const idxText = [].concat(
-        doc.h ? doc.h.map(h => h.t) : [],
-        doc.t || [],
-        doc.kw || []
-      ).join(" ");
-      const tokens = tokenize(idxText);
-      const seen = new Set(tokens);
-      for (const t of seen) df[t] = (df[t] || 0) + 1;
+      const idxText = [].concat(doc.h?doc.h.map(h=>h.t):[], doc.t||[], doc.kw||[]).join(" ");
+      const seen = new Set(tokenize(idxText));
+      for (const t of seen) df[t] = (df[t]||0)+1;
     }
     const idf = {};
     for (const t in df) idf[t] = Math.log10(1 + (N - df[t] + 0.5) / (df[t] + 0.5));
     bm25._idf = idf;
   }
-  
   const idf = bm25._idf;
-  const k1 = 1.2, b = 0.75;
+  const k1=1.2, b=0.75;
   let avgdl = 0;
-  const docLens = [];
-  const docTerms = [];
-  
-  for (let i = 0; i < allFiles.length; i++) {
+  const lens=[], terms=[];
+  for (let i=0; i<allFiles.length; i++) {
     const doc = allFiles[i];
-    const idxText = [].concat(
-      doc.h ? doc.h.map(h => h.t) : [],
-      doc.s ? doc.s.slice(0, 3) : [],
-      doc.t || [],
-      doc.kw || []
-    ).join(" ");
-    const tokens = tokenize(idxText);
-    docLens.push(tokens.length);
-    avgdl += tokens.length;
-    const cnt = {};
-    for (const t of tokens) cnt[t] = (cnt[t] || 0) + 1;
-    docTerms.push(cnt);
+    const txt = [].concat(doc.h?doc.h.map(h=>h.t):[], doc.s?doc.s.slice(0,3):[], doc.t||[], doc.kw||[]).join(" ");
+    const t = tokenize(txt);
+    lens.push(t.length); avgdl+=t.length;
+    const c={}; for(const w of t) c[w]=(c[w]||0)+1;
+    terms.push(c);
   }
-  avgdl = avgdl / allFiles.length;
-  
-  // Score each doc
+  avgdl=avgdl/allFiles.length;
   const scores = new Array(allFiles.length).fill(0);
-  let usedTerms = 0;
-  
+  let used=0;
   for (const qt of qTokens) {
     if (!(qt in idf)) continue;
-    usedTerms++;
-    const idfVal = idf[qt];
-    for (let i = 0; i < allFiles.length; i++) {
-      const tf = docTerms[i][qt] || 0;
-      if (tf === 0) continue;
-      scores[i] += idfVal * (tf * (k1 + 1)) / (tf + k1 * (1 - b + b * docLens[i] / avgdl));
+    used++;
+    for (let i=0; i<allFiles.length; i++) {
+      const tf = terms[i][qt]||0;
+      if (tf===0) continue;
+      scores[i] += idf[qt] * (tf*(k1+1)) / (tf + k1*(1-b+b*lens[i]/avgdl));
     }
   }
-  
-  if (usedTerms === 0) return [];
-  
-  // Sort
-  const indices = scores.map((s, i) => i).sort((a, b) => scores[b] - scores[a]);
-  const results = [];
-  for (const idx of indices) {
-    if (results.length >= topK) break;
-    if (scores[idx] < 0.01) break;
-    results.push({ idx, score: scores[idx], doc: allFiles[idx] });
-  }
-  return results;
+  if (used===0) return [];
+  return scores.map((s,i)=>({i,s})).filter(x=>x.s>=0.01).sort((a,b)=>b.s-a.s).slice(0,topK);
 }
 
-// ── 高亮关键词 ──
-function highlight(text, terms) {
-  let h = text;
-  for (const t of terms) {
-    if (t.length < 2) continue;
-    h = h.replace(new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), m => "<span>" + m + "</span>");
-  }
-  return h;
-}
+function setQ(q){document.getElementById("q").value=q;go();}
 
-// ── 搜索执行 ──
-function setQ(q) {
-  document.getElementById("q").value = q;
-  go();
-}
-
-function go() {
+function go(){
   const q = document.getElementById("q").value.trim();
   if (!q) return;
-  
   const results = bm25(q, 10);
-  
   if (!results.length) {
-    document.getElementById("rs").innerHTML = '<p style="text-align:center;color:#636e72;padding:40px">😕 未找到相关结果，试试其他关键词</p>';
-    document.getElementById("ft").textContent = "🔍 " + q + " · 0 条";
+    document.getElementById("rs").innerHTML = '<p style="text-align:center;color:#636e72;padding:40px">😕 未找到相关结果</p>';
+    document.getElementById("ft").textContent = "🔍 "+q+" · 0 条";
     return;
   }
-  
   let h = "";
   for (const r of results) {
-    const doc = r.doc;
-    const loc = [doc.v, doc.p, doc.pn].filter(Boolean).join(" ");
-    
-    // Find relevant snippets
-    let snippets = "";
-    if (doc.s && doc.s.length) {
-      snippets = doc.s.slice(0, 3).map(s => highlight(s, tokenize(q))).join("<br>");
-    }
-    
-    // Page references
-    let pages = "";
-    if (doc.pg && doc.pg.length) {
-      pages = doc.pg.slice(0, 4).map(p => '<span>📄 ' + p + '</span>').join("");
-    }
-    
-    // Tags
-    let tags = "";
-    if (doc.t && doc.t.length) {
-      tags = doc.t.map(t => '<span>#' + t + '</span>').join("");
-    }
-    
-    h += '<div class="r">'
-      + '<h2>📁 ' + doc.f + '</h2>'
-      + '<div class="l">📍 ' + loc + ' · ⭐ score=' + r.score.toFixed(2) + '</div>'
-      + (snippets ? '<div class="m">' + snippets + '</div>' : "")
-      + (pages ? '<div class="p">' + pages + '</div>' : "")
-      + (tags ? '<div class="t">' + tags + '</div>' : "")
-      + '</div>';
+    const doc = allFiles[r.i];
+    const loc = [doc.v,doc.p,doc.pn].filter(Boolean).join(" ");
+    const snippets = (doc.s||[]).slice(0,3).map(s => {
+      const hl = s;
+      return hl;
+    }).join("<br>");
+    const pages = (doc.pg||[]).slice(0,4).map(p => '<span>📄 '+p+'</span>').join("");
+    const tags = (doc.t||[]).map(t => '<span>#'+t+'</span>').join("");
+    h += '<div class="r"><h2>📁 '+doc.f+'</h2><div class="l">📍 '+loc+'</div>'+
+      (snippets?'<div class="m">'+snippets+'</div>':'')+
+      (pages?'<div class="p">'+pages+'</div>':'')+
+      (tags?'<div class="t">'+tags+'</div>':'')+'</div>';
   }
-  
   document.getElementById("rs").innerHTML = h;
-  document.getElementById("ft").textContent = "🔍 " + q + " · " + results.length + " 条结果";
-  
-  // Try KaTeX rendering
-  try {
-    if (window.renderMathInElement) {
-      renderMathInElement(document.getElementById("rs"), {
-        delimiters: [{left:"$",right:"$",display:false},{left:"$$",right:"$$",display:true}]
-      });
-    }
-  } catch(e) {}
+  document.getElementById("ft").textContent = "🔍 "+q+" · "+results.length+" 条结果";
 }
 </script>
 </body>
