@@ -5,27 +5,12 @@ KB = Path("/vol2/1000/working/机械设计原理/机械设计知识库")
 BASE = Path("/vol2/1000/working/机械设计原理")
 
 # 加载印刷页码→PDF页码反向映射
-_PIAN_MAPS = {}
-def _load_pian_map(vol):
-    if vol in _PIAN_MAPS:
-        return _PIAN_MAPS[vol]
-    fp = BASE / f".pian_map_v{vol}.json"
-    if not fp.exists():
-        return None
-    with open(fp) as f:
-        raw = json.load(f)
-    # raw: {pdf_pn: [pian, printed_pn]} 转为 {(pian, printed_pn): pdf_pn}
-    rev = {}
-    for pdf_pn, (pian, printed_pn) in raw.items():
-        rev[(int(pian), int(printed_pn))] = int(pdf_pn)
-    _PIAN_MAPS[vol] = rev
-    return rev
+_PIAN_START = {}
+_PS_PATH = BASE / ".pian_start.json"
+if _PS_PATH.exists():
+    with open(_PS_PATH) as f:
+        _PIAN_START = json.load(f)
 
-def _lookup_pdf_page(vol_num, pian, page):
-    m = _load_pian_map(vol_num)
-    if m is None:
-        return None
-    return m.get((int(pian), int(page)))
 EX = {"页码对照表","卷章篇索引","GB标准清单","JB标准清单","设计流程与规范","深化计划","README"}
 VOL_G = {"01":"第1卷","02":"第1卷","03":"第1卷","04":"第2卷","05":"第3卷","06":"第5卷","07":"第1卷","08":"第1卷"}
 PIAN_NAMES = {
@@ -89,13 +74,21 @@ def search(q, mr=5):
             for w in terms:
                 if w in ls: ml.append(ls[:150]); break
             if len(ml)>=3: break
-        # 篇范围（不展示不精确的具体页码）
+        # 篇范围（含PDF跳转信息）
         sr = ''
+        sr_vol = ''
+        sr_pian = ''
+        sr_pdf = 0
+        pdf_start = 0
         sm = re.search(r'> \*\*来源标注：\*\*.*?第(\d+)卷.*?第(\d+)篇.*?》', t[:800])
         if sm:
             sr = f"第{sm.group(1)}卷 第{sm.group(2)}篇"
+            sr_vol = sm.group(1)
+            sr_pian = f"第{sm.group(2)}篇"
+            vmap = _PIAN_START.get(f"第{sr_vol}卷", {})
+            pdf_start = vmap.get(sr_pian, 0)
         gh_url = f"https://github.com/nasplycc/mechanical-design-handbook/blob/main/机械设计知识库/{rel}"
-        res.append({"file":rel,"gh":gh_url,"sr":sr,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml})
+        res.append({"file":rel,"gh":gh_url,"sr":sr,"sr_vol":sr_vol,"sr_pian":sr_pian,"sr_pdf":int(pdf_start) if pdf_start else 0,"score":s,"vol":d["vol"],"pian":d["pian"],"pn":d["pn"],"matches":ml})
     res.sort(key=lambda r:-r["score"])
     return res[:mr]
 
@@ -153,7 +146,7 @@ function go(){
     let h=''
     d.r.forEach(r=>{
       let loc=(r.vol||'')+' '+(r.pian||'')+' '+(r.pn||'')
-      let pp = r.sr ? '<span style="background:#e8f4fd;padding:2px 8px;border-radius:4px;font-size:12px;color:#636e72">📖 '+r.sr+' 范围</span>' : '';
+      let pp = r.sr ? '<a href="/pdf/'+r.sr_vol+'#page='+r.sr_pdf+'" target="_blank" style="background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#e67e22;text-decoration:none;border:1px solid #ffe0b0;display:inline-block">📖 '+r.sr+' ⬀</a>' : '';
       let mm=(r.matches||[]).map(m=>m+'<br>').join('')
       h+='<div class="r"><h2>📁 <a href="'+r.gh+'" target="_blank" style="color:#0984e3;text-decoration:none">'+r.file+'</a> <a href="'+r.gh+'" target="_blank" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">↗</a></h2><div class="l">📍 '+loc+'</div><div class="m">'+mm+'</div><div class="p">'+pp+'</div></div>'
     })

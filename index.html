@@ -181,7 +181,7 @@ function go(){
     }).join("<br>");
     const pages = doc.sr ? '<span style="background:#e8f4fd;padding:2px 10px;border-radius:4px;font-size:12px;color:#636e72;display:inline-block">📖 '+doc.sr+' 范围</span>' : '';
     const tags = (doc.t||[]).map(t => '<span>#'+t+'</span>').join("");
-    h += '<div class="r"><h2>📁 <a href="'+doc.gh+'" target="_blank" style="color:#0984e3;text-decoration:none">'+doc.f+'</a> <a href="'+doc.gh+'" target="_blank" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">↗</a></h2><div class="l">📍 '+loc+'</div>'+
+    h += '<div class="r"><h2>📁 <a href="view.html?file='+encodeURIComponent(doc.f)+'" style="color:#0984e3;text-decoration:none">'+doc.f+'</a> <a href="view.html?file='+encodeURIComponent(doc.f)+'" style="font-size:11px;color:#636e72;text-decoration:none;vertical-align:super">📖</a></h2><div class="l">📍 '+loc+'</div>'+
       (pages?'<div class="p">'+pages+'</div>':'')+
       (snippets?'<div class="m">'+snippets+'</div>':'')+
       (pages?'<div class="p">'+pages+'</div>':'')+
